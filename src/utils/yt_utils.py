@@ -129,16 +129,27 @@ def yt_crawler():
 
     os.system(f'mkdir -p {config["MP3_FOLDER"]}')
     command_base = f"yt-dlp -x --audio-format mp3 --add-metadata -o '{config['MP3_FOLDER']}/%(title)s.%(ext)s' -- "
+    
+    # get the list of files with previous errors from MP3_ERROR_FILE in case it exists
+    if os.path.exists(os.path.expanduser(config['MP3_ERROR_FILE'])):
+        previous_errors = [line.strip() for line in open(os.path.expanduser(config['MP3_ERROR_FILE'])).readlines()]
+    else:
+        print(f"No previous errors file found at {os.path.expanduser(config['MP3_ERROR_FILE'])}")
+        previous_errors = []
+
     for video_id in videos_to_download:
-        if not video_exists_in_folder(video_id, config["MP3_FOLDER"]):
+        if not video_exists_in_folder(video_id, config["MP3_FOLDER"]) and video_id not in previous_errors:
             to_be_replaced = f"{config['MP3_FOLDER']}/"
             replacement = f"{to_be_replaced}{video_id}__"
             command = command_base.replace(to_be_replaced, replacement)
             full_command = f"{command}{video_id}"
             print(full_command)
-            os.system(full_command)
-        else:
-            print(f"Video {video_id} already exists in MP3 folder, skipping...")
+            # detect if the command returns an error
+            if os.system(full_command) != 0:
+                # write the error to file MP3_ERROR_FILE
+                with open(os.path.expanduser(config['MP3_ERROR_FILE']), 'a') as f:
+                    f.write(f"{video_id}\n")
+                    print(f"Error downloading video {video_id}, written to {os.path.expanduser(config['MP3_ERROR_FILE'])}")
 
 
 if __name__ == "__main__":
