@@ -81,18 +81,14 @@ def get_neighbors_to_estimate_precision():
     # remove from vectors the rows where mask_null is True
     vectors = vectors[~mask_null]
 
-
-
     # Apply the cleaning function to the chords_set column
     metadata['chords_set'] = metadata['chords_set'].apply(clean_chords_set)
-
 
     # Convert the vectors DataFrame to a numpy array
     vectors_array = vectors.to_numpy()
 
     # Create a NearestNeighbors model
     nbrs = NearestNeighbors(n_neighbors=N_NEIGHBORS+1, algorithm='brute', metric='cosine').fit(vectors_array)
-
 
     hits = 0
     random_hits = 0
