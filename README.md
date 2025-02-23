@@ -3,7 +3,7 @@ Audio embeddings for music similarity search
 
 ## Requirements
 
-- It uses CoverHunterMPS to extract embeddings from audio files, downloaded on folder `$COVERHUNTER_FOLDER`.
+- It uses [CoverHunterMPS](https://github.com/alanngnet/CoverHunterMPS) to extract embeddings from audio files, downloaded on folder `$COVERHUNTER_FOLDER`.
 
     `git clone https://github.com/alanngnet/CoverHunterMPS`
      A pretrained model is required in `$MODEL_FOLDER`
