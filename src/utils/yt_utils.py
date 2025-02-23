@@ -80,20 +80,29 @@ def crawl_video_for_song(driver, artist, title):
 def yt_crawler():
     youtube_ids = []
     df = pd.read_csv(METADATA_YT_INPUT_FILE, sep='\t')
-
-    target_chords = {'C', 'G', 'Am', 'F'}
-    target_chords = {'C', 'G', 'Em', 'D'}
-    target_chords = {'G#', 'C#', 'D#', 'Fm'}
-    target_chords = {'E', 'D', 'F#m', 'A'}
-    target_chords = {'A#m', 'D#m', 'C', 'G#m'}
-    target_chords = {'C#', 'D#', 'Fm', 'G#'}
-    target_chords = {'F#m', 'G#', 'Em', 'Bm'}
-
-
+    
     # Convert the 'chords' column to actual lists and filter rows
     df['chords_list'] = df['chords'].apply(lambda x: ast.literal_eval(x))  # Safely evaluate the string as a list
     
     df['chords_set'] = df['chords'].apply(lambda x: set(ast.literal_eval(x)))
+
+    # print value_counts for target_chords already crawled
+    print("Chords set value counts for already crawled videos:")
+    print(df[df.youtube_id.notna()]['chords_set'].value_counts())
+
+    # get chords_set value_counts from df
+    print("Chords set value counts for not crawled videos:")
+    chords_set_counts = df[df.youtube_id.isna()]['chords_set'].value_counts()
+    print(chords_set_counts)
+
+    if config['CRAWL_NEW']:
+        # take the chords_set with the most counts as target_chords
+        target_chords = chords_set_counts.index[0]
+        print(f"So next target chords to crawl: {target_chords}")
+        print(target_chords)
+    else:
+        target_chords = {}
+
     filtered_df = df[df.chords_set == target_chords]
     filtered_df = filtered_df[filtered_df.youtube_id.isna()]
 
@@ -131,3 +140,7 @@ def yt_crawler():
             os.system(full_command)
         else:
             print(f"Video {video_id} already exists in MP3 folder, skipping...")
+
+
+if __name__ == "__main__":
+    yt_crawler()

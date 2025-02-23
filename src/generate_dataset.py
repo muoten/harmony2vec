@@ -18,10 +18,12 @@ def generate_dataset():
 
 
     # if file $WAV_FOLDER/full.txt exists and its number of lines is not coincident with lines in $WAV_FOLDER/dataset.txt, remove
+    expanded_wav_folder = os.path.expanduser(config['WAV_FOLDER'])
+    target_len = len(open(os.path.join(expanded_wav_folder, 'dataset.txt')).readlines())
     for file in ['full.txt', 'sp_aug.txt']:
-        if os.path.exists(os.path.join(config['WAV_FOLDER'], file)):
-            if len(open(os.path.join(config['WAV_FOLDER'], file)).readlines()) != len(open(os.path.join(config['WAV_FOLDER'], 'dataset.txt')).readlines()):
-                os.remove(os.path.join(config['WAV_FOLDER'], file))
+        if os.path.exists(os.path.join(expanded_wav_folder, file)): 
+            if len(open(os.path.join(expanded_wav_folder, file)).readlines()) != target_len:
+                os.remove(os.path.join(expanded_wav_folder, file))
 
     # Copy the hparams.yaml file to the wav folder
     os.system(f"cp {config['COVERHUNTER_FOLDER']}/data/covers80_testset/hparams.yaml {config['WAV_FOLDER']}")
