@@ -87,6 +87,7 @@ def yt_crawler():
     target_chords = {'E', 'D', 'F#m', 'A'}
     target_chords = {'A#m', 'D#m', 'C', 'G#m'}
     target_chords = {'C#', 'D#', 'Fm', 'G#'}
+    target_chords = {'F#m', 'G#', 'Em', 'Bm'}
 
 
     # Convert the 'chords' column to actual lists and filter rows

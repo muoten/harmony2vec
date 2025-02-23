@@ -35,12 +35,22 @@ def merge_metadata_from_dataset():
     df['youtube_id'] = df['title'].str.extract(r'_(.*?)__')
     print(df['youtube_id'].head())
 
+        # if df contains any duplicate in colum title, raise an error
+    if df['title'].duplicated().any():
+        # in error message, print the duplicate titles
+        raise ValueError(f"metadata contains duplicate titles: {df[df['title'].duplicated()]['title'].unique()}")
 
     # read the old metadata file
-    old_metadata = pd.read_csv(metadata_yt_output_file, sep='\t')
+    metadata_yt = pd.read_csv(metadata_yt_output_file, sep='\t')
+
 
     # merge df and old_metadata on youtube_id
-    df = pd.merge(df, old_metadata, on='youtube_id', how='left')
+    df = pd.merge(df, metadata_yt, on='youtube_id', how='left')
+
+    # if df contains any duplicate in colum title, raise an error
+    if df['title'].duplicated().any():
+        # in error message, print the duplicate titles
+        raise ValueError(f"metadata contains duplicate titles: {df[df['title'].duplicated()]['title'].unique()}")
 
     print(df.head())
     df = df.fillna('')

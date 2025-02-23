@@ -8,6 +8,10 @@ from utils.merge_metadata_from_dataset import merge_metadata_from_dataset
 
 
 def convert_embeddings_to_csv():
+
+     # First, merge the metadata from the dataset.txt file to be used to convert the embeddings to a csv file
+    merge_metadata_from_dataset()
+
     wav_folder = os.path.expanduser(config['WAV_FOLDER'])
     # Path to the pickle file
     pickle_file_path = os.path.join(wav_folder, 'reference_embeddings.pkl')
@@ -19,9 +23,18 @@ def convert_embeddings_to_csv():
     metadata_file_path = config['METADATA_OUTPUT_FILE']
     metadata = pd.read_csv(metadata_file_path, sep='\t')
 
+    # if metadata contains any duplicate in colum title, raise an error
+    if metadata['title'].duplicated().any():
+        # in error message, print the duplicate titles
+        raise ValueError(f"metadata contains duplicate titles: {metadata[metadata['title'].duplicated()]['title'].unique()}")
+
     # Load the embeddings from the pickle file
     with open(pickle_file_path, 'rb') as f:
         reference_embeddings = pickle.load(f)
+
+    # get the number of keys in the reference_embeddings dictionary
+    num_keys = len(reference_embeddings)
+    print(f"Number of keys in the reference_embeddings dictionary: {num_keys}")
 
     # Convert the dictionary to a DataFrame
     reference_embeddings_df = pd.DataFrame.from_dict(reference_embeddings, orient='index')
@@ -46,6 +59,10 @@ def convert_embeddings_to_csv():
 
     embeddings_list = merged_data.iloc[:, 11:].values
 
+    # check embeddings_list has the same number of rows as num_keys
+    if embeddings_list.shape[0] != num_keys:
+        raise ValueError(f"embeddings_list has {embeddings_list.shape[0]} rows, but num_keys is {num_keys}")
+
     # Apply PCA to reduce dimensionality to 20
     pca = PCA(n_components=49)
     reduced_embeddings = pca.fit_transform(embeddings_list)
@@ -64,8 +81,6 @@ def convert_embeddings_to_csv():
 
 if __name__ == "__main__":
 
-    # First, merge the metadata from the dataset.txt file to be used to convert the embeddings to a csv file
-    merge_metadata_from_dataset()
     # Then, convert the embeddings to a csv file
     convert_embeddings_to_csv()
 
