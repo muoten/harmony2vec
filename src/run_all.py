@@ -25,4 +25,9 @@ if __name__ == "__main__":
     # get number of lines of metadata_${VERSION}.csv and metadata_OLD_VERSION.csv and get the difference to estimate how many new songs were added
     metadata_version = pd.read_csv(os.path.join(os.path.expanduser(config['METADATA_OUTPUT_FILE'])), sep='\t')
     metadata_old_version = pd.read_csv(os.path.join(os.path.expanduser(config['METADATA_OLD_VERSION_FILE'])), sep='\t')
-    print(f"Number of new songs added in last iteration: {len(metadata_version) - len(metadata_old_version)}")
+    last_message = (
+        "Number of new songs added in last iteration " 
+        f"comparing {config['METADATA_OUTPUT_FILE']} and {config['METADATA_OLD_VERSION_FILE']}: "
+        f"{len(metadata_version) - len(metadata_old_version)}"
+    )
+    print(last_message)

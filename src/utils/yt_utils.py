@@ -96,18 +96,17 @@ def yt_crawler():
     print(chords_set_counts)
 
     if config['CRAWL_NEW']:
-        # take the chords_set with the most counts as target_chords
-        target_chords = chords_set_counts.index[0]
+        target_chords = list(chords_set_counts.index)
         print(f"So next target chords to crawl: {target_chords}")
-        print(target_chords)
     else:
         target_chords = {}
 
-    filtered_df = df[df.chords_set == target_chords]
+    filtered_df = df[df.chords_set.isin(target_chords)]
     filtered_df = filtered_df[filtered_df.youtube_id.isna()]
+    filtered_df = filtered_df.head(config['MAX_SONGS_TO_CRAWL'])
 
     n_targets = len(filtered_df)
-    print(f"Identified {n_targets} new targets to be crawled")
+    print(f"{n_targets} new targets to be crawled")
     if n_targets > 0:
         # Set up the Chrome WebDriver using ChromeDriverManager
         service = Service(ChromeDriverManager().install())

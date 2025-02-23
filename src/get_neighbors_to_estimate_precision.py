@@ -7,7 +7,7 @@ from utils.parse_config import config
 from statsmodels.stats.proportion import proportions_ztest
 
 
-IS_DEBUG = True
+IS_DEBUG = False
 N_NEIGHBORS = 1
 
 # set the seed for the random number generator
@@ -33,8 +33,6 @@ def clean_chords_set(chords_set_str):
 # Define a function to find the nearest neighbors
 def find_neighbors(vector, nbrs):
     distances, indices = nbrs.kneighbors([vector])
-    print(distances)
-    print(indices)
     return indices[0]
 
 
@@ -58,15 +56,15 @@ def estimate_statistical_significance(hits, random_hits, total, total_random):
     nobs = [total1, total2]
     stat, p_value = proportions_ztest(count, nobs, alternative='larger')
 
-    print("Z-statistic:", stat)
-    print("P-value:", p_value)
+    print_force("Z-statistic:", stat)
+    print_force("P-value:", p_value)
 
     # Interpretation
     alpha = 0.05  # Significance level
     if p_value < alpha:
-        print("Reject the null hypothesis: Binomial 1 proportion is greater than Binomial 2 proportion.")
+        print_force("Reject the null hypothesis: Binomial 1 proportion is greater than Binomial 2 proportion.")
     else:
-        print("Fail to reject the null hypothesis: No evidence that Binomial 1 proportion is greater.")
+        print_force("Fail to reject the null hypothesis: No evidence that Binomial 1 proportion is greater.")
 
 
 def get_neighbors_to_estimate_precision():
@@ -132,7 +130,6 @@ def get_neighbors_to_estimate_precision():
         baselines = [baseline for baseline in baselines if baseline != target_vector_index]
         if len(baselines) < N_NEIGHBORS*10:
             baselines.extend(random.sample(range(len(metadata)), N_NEIGHBORS*10 - len(baselines)))
-        print_force(f"Baselines: {baselines}")
 
         # how many random baselines have the same chords_set as the target vector
         sum = (metadata.iloc[baselines]['chords_set']==target_chords_set).sum()
