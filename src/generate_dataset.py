@@ -4,7 +4,6 @@ from utils.get_dataset_from_audio_folder import get_dataset_from_audio_folder
 import os
 from utils.parse_config import config
 
-
 def generate_dataset():
     # Download the audio files from youtube to $MP3_FOLDER
     if not os.path.exists(config['METADATA_YT_OUTPUT_FILE']):

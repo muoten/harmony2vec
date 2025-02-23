@@ -17,11 +17,12 @@ def convert_mp3_to_mono_wav_16k():
         if mp3_file.endswith('.mp3'):
             # Extract the base name of the file (without extension)
             base_name = os.path.splitext(mp3_file)[0]
-            print(f"Converting {base_name}")
+            
             # Define the output WAV file path
             wav_file = os.path.join(output_dir, f"{base_name}.wav")
 
             if not os.path.exists(wav_file):
+                print(f"Converting {base_name}")
                 # Convert MP3 to WAV with mono audio and 16 kHz sample rate
                 subprocess.run(['ffmpeg', '-n','-i', os.path.join(input_dir, mp3_file), '-ac', '1', '-ar', '16000', wav_file])
 

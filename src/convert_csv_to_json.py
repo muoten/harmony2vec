@@ -21,7 +21,6 @@ def convert_csv_to_json():
     json_data = {
         "rows": []
     }
-    print(merged_df.columns)
 
     # Iterate through the merged dataframe and create the JSON structure
     # for the vector field we need to use columns 0 to 19

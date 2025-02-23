@@ -39,6 +39,10 @@ def video_exists_in_folder(video_id, mp3_folder):
 def crawl_video_for_song(driver, artist, title):
     artist = artist.replace(' ', '-').replace('\'', '')
     title = title.replace(' ', '-').replace('\'', '')
+    # if entry is in CRAWL_ERROR_FILE, return None
+    if f"{artist}/{title}\n" in open(os.path.expanduser(config['CRAWL_ERROR_FILE'])).readlines():
+        return None
+
     youtube_id = None
     try:
         # Step 1: Go to the Hooktheory chord progression search page
@@ -74,6 +78,10 @@ def crawl_video_for_song(driver, artist, title):
     except:
         pass
 
+    # if youtube_id is None or empty add to CRAWL_ERROR_FILE
+    if youtube_id is None or youtube_id == "":
+        with open(os.path.expanduser(config['CRAWL_ERROR_FILE']), 'a') as f:
+            f.write(f"{artist}/{title}\n")
     return youtube_id
 
 
@@ -97,7 +105,6 @@ def yt_crawler():
 
     if config['CRAWL_NEW']:
         target_chords = list(chords_set_counts.index)
-        print(f"So next target chords to crawl: {target_chords}")
     else:
         target_chords = {}
 
