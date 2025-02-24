@@ -57,7 +57,7 @@ def convert_embeddings_to_csv():
 
     # get embeddings from merged_data columns embedding_dim_0 to embedding_dim_127
 
-    embeddings_list = merged_data.iloc[:, 11:].values
+    embeddings_list = merged_data.iloc[:, 13:].values
 
     # check embeddings_list has the same number of rows as num_keys
     if embeddings_list.shape[0] != num_keys:

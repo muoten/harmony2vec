@@ -7,7 +7,7 @@ from utils.parse_config import config
 from statsmodels.stats.proportion import proportions_ztest
 
 
-IS_DEBUG = False
+IS_DEBUG = True
 N_NEIGHBORS = 1
 
 # set the seed for the random number generator
@@ -72,13 +72,6 @@ def get_neighbors_to_estimate_precision():
 
     vectors = pd.read_csv(config['VECTOR_OUTPUT_FILE'], sep='\t', header=None)
 
-    # Check for empty strings, whitespace-only strings, NaN, or None in 'chords_set'
-    mask_null = metadata['chords_set'].apply(lambda x: (isinstance(x, str) and x.strip() == '""') or pd.isna(x) or x is None)
-    # remove from metadata the rows where mask_null is True
-    metadata = metadata[~mask_null]
-    # remove from vectors the rows where mask_null is True
-    vectors = vectors[~mask_null]
-
     # Apply the cleaning function to the chords_set column
     metadata['chords_set'] = metadata['chords_set'].apply(clean_chords_set)
 
@@ -90,6 +83,9 @@ def get_neighbors_to_estimate_precision():
 
     hits = 0
     random_hits = 0
+
+    cover_hits = 0
+    cover_total = 0
 
     for target_vector_index, vector in enumerate(vectors_array):    
         # print the row of metadata file corresponding to the target vector {target_vector_index}
@@ -113,6 +109,15 @@ def get_neighbors_to_estimate_precision():
         distance1 = cosine_distance(source_vector, destination_vector1)
         print(f"Distance between target vector and first neighbor: {distance1}")
 
+        print(metadata.columns)
+        # if version is not none check if work_id is the same
+        if not pd.isna(metadata.iloc[target_vector_index]['work_id']):
+            cover_total += 1
+            if metadata.iloc[neighbors[0]]['work_id'] != metadata.iloc[target_vector_index]['work_id']:
+                print("Neighbors are from different works")
+                continue
+            else:
+                cover_hits += 1
         # print the rows from the metadata file that have the same number of row as the neighbors
         print("Neighbors:")
         print(metadata.iloc[neighbors])
@@ -142,6 +147,7 @@ def get_neighbors_to_estimate_precision():
     # force print the final result even if IS_DEBUG is False
     print_force(f"{hits} hits out of {total}. So {hits/total*100:.1f}%")    
     print_force(f"{random_hits} random hits out of {total_random}. So {random_hits/total_random*100:.1f}%")
+    print_force(f"{cover_hits} cover hits out of {cover_total}. So {cover_hits/cover_total*100:.1f}%")
     estimate_statistical_significance(hits, random_hits, total, total_random)
 
 
