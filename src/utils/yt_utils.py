@@ -79,7 +79,8 @@ def crawl_video_for_song(driver, artist, title):
         pass
 
     # if youtube_id is None or empty add to CRAWL_ERROR_FILE
-    if youtube_id is None or youtube_id == "":
+    if youtube_id is None or youtube_id == "" or youtube_id == "null" or len(youtube_id) != 11:
+        youtube_id = None
         with open(os.path.expanduser(config['CRAWL_ERROR_FILE']), 'a') as f:
             f.write(f"{artist}/{title}\n")
     return youtube_id

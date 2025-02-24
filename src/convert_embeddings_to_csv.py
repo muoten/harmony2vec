@@ -78,10 +78,38 @@ def convert_embeddings_to_csv():
 
     print(f"Reduced vectors CSV created at {csv_file_path}")
 
+    # postprocess the csv files to remove empty chords
+    postprocess_csvs_to_remove_empty_chords(os.path.expanduser(config['METADATA_OUTPUT_FILE']), os.path.expanduser(config['VECTOR_OUTPUT_FILE']))
+
+
+
+def postprocess_csvs_to_remove_empty_chords(csv_metadata_file_path, csv_vectors_file_path):
+    # read metadata.csv
+    metadata = pd.read_csv(csv_metadata_file_path, sep='\t')
+    # read vectors.csv
+    vectors = pd.read_csv(csv_vectors_file_path, sep='\t', header=None)
+
+    # Check for empty strings, whitespace-only strings, NaN, or None in 'chords_set'
+    mask_null = metadata['chords_set'].apply(lambda x: (isinstance(x, str) and x.strip() == '""') or pd.isna(x) or x is None)
+        
+    # remove from metadata the rows where mask_null is True
+    metadata = metadata[~mask_null]
+    # remove from vectors the rows where mask_null is True
+    vectors = vectors[~mask_null]
+
+    # write metadata to csv
+    metadata.to_csv(csv_metadata_file_path, sep='\t', index=False)
+    # write vectors to csv
+    vectors.to_csv(csv_vectors_file_path, sep='\t', index=False, header=False)
+    # print the number of rows in the metadata and vectors after postprocessing
+    print(f"Number of rows in the metadata after postprocessing to remove empty chords: {metadata.shape[0]}")
+    print(f"Number of rows in the vectors after postprocessing to remove empty chords: {vectors.shape[0]}")
+       
+        
 
 if __name__ == "__main__":
-
     # Then, convert the embeddings to a csv file
-    convert_embeddings_to_csv()
+    convert_embeddings_to_csv() 
+
 
 
