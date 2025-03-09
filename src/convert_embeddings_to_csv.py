@@ -93,9 +93,9 @@ def postprocess_csvs_to_remove_empty_chords(csv_metadata_file_path, csv_vectors_
     mask_null = metadata['chords_set'].apply(lambda x: (isinstance(x, str) and x.strip() == '""') or pd.isna(x) or x is None)
         
     # remove from metadata the rows where mask_null is True
-    metadata = metadata[~mask_null]
+    #metadata = metadata[~mask_null]
     # remove from vectors the rows where mask_null is True
-    vectors = vectors[~mask_null]
+    #vectors = vectors[~mask_null]
 
     # write metadata to csv
     metadata.to_csv(csv_metadata_file_path, sep='\t', index=False)

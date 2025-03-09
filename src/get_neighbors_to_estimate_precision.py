@@ -87,6 +87,8 @@ def get_neighbors_to_estimate_precision():
     cover_hits = 0
     cover_total = 0
 
+    n_empty_chords = 0
+
     for target_vector_index, vector in enumerate(vectors_array):    
         # print the row of metadata file corresponding to the target vector {target_vector_index}
 
@@ -110,7 +112,7 @@ def get_neighbors_to_estimate_precision():
         print(f"Distance between target vector and first neighbor: {distance1}")
 
         print(metadata.columns)
-        # if version is not none check if work_id is the same
+        # if work_id is not none check if work_id is the same
         if not pd.isna(metadata.iloc[target_vector_index]['work_id']):
             cover_total += 1
             if metadata.iloc[neighbors[0]]['work_id'] != metadata.iloc[target_vector_index]['work_id']:
@@ -125,24 +127,29 @@ def get_neighbors_to_estimate_precision():
         # get the chords_set from the target vector
         target_chords_set = metadata.iloc[target_vector_index]['chords_set']
 
-        # how many neighbors have the same chords_set as the target vector
-        sum = (metadata.iloc[neighbors]['chords_set']==target_chords_set).sum()
-        print(f"Number of neighbors with the same chords_set as the target vector: {sum}")
-        hits += sum
+        empty_chords_set = len(target_chords_set) == 0 
+        if empty_chords_set:
+            print("Target chords set is empty")
+            n_empty_chords += 1
+        else:
+            # how many neighbors have the same chords_set as the target vector
+            sum = (metadata.iloc[neighbors]['chords_set']==target_chords_set).sum()
+            print(f"Number of neighbors with the same chords_set as the target vector: {sum}")
+            hits += sum
 
-        # get a list of N_NEIGHBORS elements random to act as baselines
-        baselines = random.sample(range(len(metadata)), N_NEIGHBORS*10)
-        baselines = [baseline for baseline in baselines if baseline != target_vector_index]
-        if len(baselines) < N_NEIGHBORS*10:
-            baselines.extend(random.sample(range(len(metadata)), N_NEIGHBORS*10 - len(baselines)))
+            # get a list of N_NEIGHBORS elements random to act as baselines
+            baselines = random.sample(range(len(metadata)), N_NEIGHBORS*10)
+            baselines = [baseline for baseline in baselines if baseline != target_vector_index]
+            if len(baselines) < N_NEIGHBORS*10:
+                baselines.extend(random.sample(range(len(metadata)), N_NEIGHBORS*10 - len(baselines)))
 
-        # how many random baselines have the same chords_set as the target vector
-        sum = (metadata.iloc[baselines]['chords_set']==target_chords_set).sum()
-        print(f"Number of random baselines with the same chords_set as the target vector: {sum}")
-        random_hits += sum
+            # how many random baselines have the same chords_set as the target vector
+            sum = (metadata.iloc[baselines]['chords_set']==target_chords_set).sum()
+            print(f"Number of random baselines with the same chords_set as the target vector: {sum}")
+            random_hits += sum
         
-    total = len(vectors_array) * N_NEIGHBORS
-    total_random = len(vectors_array) * N_NEIGHBORS*10
+    total = (len(vectors_array) - n_empty_chords) * N_NEIGHBORS
+    total_random = (len(vectors_array) - n_empty_chords) * N_NEIGHBORS*10
 
     # force print the final result even if IS_DEBUG is False
     print_force(f"{hits} hits out of {total}. So {hits/total*100:.1f}%")    

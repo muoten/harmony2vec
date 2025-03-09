@@ -90,6 +90,7 @@ def yt_crawler():
     youtube_ids = []
     df = pd.read_csv(METADATA_YT_INPUT_FILE, sep='\t')
     
+    df['chords'] = df['chords'].fillna('[]')
     # Convert the 'chords' column to actual lists and filter rows
     df['chords_list'] = df['chords'].apply(lambda x: ast.literal_eval(x))  # Safely evaluate the string as a list
     
@@ -110,18 +111,22 @@ def yt_crawler():
         target_chords = {}
 
     filtered_df = df[df.chords_set.isin(target_chords)]
-    filtered_df = filtered_df[filtered_df.youtube_id.isna()]
+    mask_not_downloaded = filtered_df.youtube_id.isna() | filtered_df.tempo == -1
+    filtered_df = filtered_df[mask_not_downloaded]
     filtered_df = filtered_df.head(config['MAX_SONGS_TO_CRAWL'])
 
     n_targets = len(filtered_df)
-    print(f"{n_targets} new targets to be crawled")
+    print(f"{n_targets} new potential targets to be crawled")
     if n_targets > 0:
         # Set up the Chrome WebDriver using ChromeDriverManager
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service)
 
         for song, artist in zip(filtered_df["song"], filtered_df["artist"]):
-            youtube_id = crawl_video_for_song(driver, artist, song)
+            if filtered_df["tempo"] == -1:
+                youtube_id = crawl_video_for_song(driver, artist, song)
+            else:
+                youtube_id = filtered_df["youtube_id"]
             youtube_ids.append(youtube_id)
         df.loc[filtered_df.index,'youtube_id'] = youtube_ids
         df.to_csv(METADATA_YT_OUTPUT_FILE, index=False, sep='\t')
