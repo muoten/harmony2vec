@@ -92,11 +92,6 @@ def get_neighbors_to_estimate_precision():
     for target_vector_index, vector in enumerate(vectors_array):    
         # print the row of metadata file corresponding to the target vector {target_vector_index}
 
-        print(f"Target vector {target_vector_index}:")
-        print(metadata.iloc[target_vector_index:target_vector_index+1])
-        print(vectors_array[target_vector_index])
-
-
         # find the neighbors of the first vector
         neighbors = find_neighbors(vectors_array[target_vector_index], nbrs)
         # exclude the first neighbor, which is the vector itself
@@ -104,25 +99,26 @@ def get_neighbors_to_estimate_precision():
 
         # also get cosine distance between the target vector and each of the neighbors
         source_vector = vectors_array[target_vector_index]
-        print(source_vector)
         destination_vector1 = vectors_array[neighbors[0]]
         
-        print(destination_vector1)
         distance1 = cosine_distance(source_vector, destination_vector1)
-        print(f"Distance between target vector and first neighbor: {distance1}")
 
-        print(metadata.columns)
         # if work_id is not none check if work_id is the same
         if not pd.isna(metadata.iloc[target_vector_index]['work_id']):
+            print(metadata.iloc[target_vector_index]['work_id'])
+            print(f"Target vector {target_vector_index}:")
+            print(metadata.iloc[target_vector_index])
+            print(vectors_array[target_vector_index])
             cover_total += 1
             if metadata.iloc[neighbors[0]]['work_id'] != metadata.iloc[target_vector_index]['work_id']:
-                print("Neighbors are from different works")
+                print("Closest neighbor has not same work_id")
+                print(metadata.iloc[neighbors[0]])
                 continue
             else:
                 cover_hits += 1
         # print the rows from the metadata file that have the same number of row as the neighbors
-        print("Neighbors:")
-        print(metadata.iloc[neighbors])
+            print("Neighbors:")
+            print(metadata.iloc[neighbors])
 
         # get the chords_set from the target vector
         target_chords_set = metadata.iloc[target_vector_index]['chords_set']
@@ -134,7 +130,6 @@ def get_neighbors_to_estimate_precision():
         else:
             # how many neighbors have the same chords_set as the target vector
             sum = (metadata.iloc[neighbors]['chords_set']==target_chords_set).sum()
-            print(f"Number of neighbors with the same chords_set as the target vector: {sum}")
             hits += sum
 
             # get a list of N_NEIGHBORS elements random to act as baselines
@@ -145,7 +140,6 @@ def get_neighbors_to_estimate_precision():
 
             # how many random baselines have the same chords_set as the target vector
             sum = (metadata.iloc[baselines]['chords_set']==target_chords_set).sum()
-            print(f"Number of random baselines with the same chords_set as the target vector: {sum}")
             random_hits += sum
         
     total = (len(vectors_array) - n_empty_chords) * N_NEIGHBORS

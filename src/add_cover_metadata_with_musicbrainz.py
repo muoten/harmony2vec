@@ -182,14 +182,18 @@ def loop_to_crawl_cover_metadata_by_row_number_and_update_dataframe(N,	df):
 	print(df.iloc[N])
 	my_youtube_id = df.iloc[N].youtube_id
 
-	# we get the right work_id from the last full.txt file
+	if pd.isna(my_youtube_id):
+		print(f"youtube_id {my_youtube_id} is not a valid youtube_id, skipping")
+		return df
+
+	# we look for the youtube_id in last full.txt file
 	str_entry = get_entry_in_full_txt_by_youtube_id(my_youtube_id)
 	if str_entry == "":
 		print(f"youtube_id {my_youtube_id} not found in full txt file, skipping")
 		return df
 			
-	dict_entry = json.loads(str_entry)
-	work_id = dict_entry['work_id']
+	#dict_entry = json.loads(str_entry)
+	#work_id = dict_entry['work_id']
 	
 	# we get the old work id. If work_id is not None, skip
 	if not pd.isna(df.iloc[N].work_id):
@@ -211,6 +215,16 @@ def loop_to_crawl_cover_metadata_by_row_number_and_update_dataframe(N,	df):
 		if cover_youtube_id in df.youtube_id.values:
 			print(f"youtube_id {cover_youtube_id} already exists in dataframe")
 			return df
+		# check if the youtube_id can be accessed
+		try:
+			response = requests.get(f"https://www.youtube.com/watch?v={cover_youtube_id}", headers=headers)
+			if response.status_code != 200:
+				print(f"youtube_id {cover_youtube_id} cannot be accessed")
+				return df
+		except Exception as e:
+			print(f"youtube_id {cover_youtube_id} cannot be accessed")
+			print(e)
+			return df
 		print(cover_youtube_id, cover_artist_name, cover_title)
 	except Exception as e:
 		print(e)
@@ -220,22 +234,19 @@ def loop_to_crawl_cover_metadata_by_row_number_and_update_dataframe(N,	df):
 	# if youtube_id is not None or iswcs is not None, then we can update the csv file
 	if cover_youtube_id is not None or iswcs is not None:
 
-
-
-		old_work_id = df.iloc[N].work_id
-		if not pd.isna(old_work_id):
-			print("old_work_id was found in full txt file:", old_work_id)
-
-			# replace all occurences of old_work_id with work_id
-			df.loc[df['work_id'] == old_work_id, 'work_id'] = work_id
-		else:
-			df.loc[N, 'work_id'] = work_id
-
 		if iswcs is not None:
 			df.loc[N, 'iswcs'] = iswcs
 
 		if cover_youtube_id is not None:
 			print(f"Inserting row for youtube_id {cover_youtube_id} at position {N+1}")
+			old_work_id = df.iloc[N].work_id
+			if not pd.isna(old_work_id):
+				print("old_work_id was found in full txt file:", old_work_id)
+				# replace all occurences of old_work_id with work_id
+				df.loc[df['work_id'] == old_work_id, 'work_id'] = work_id
+			else:
+				df.loc[N, 'work_id'] = work_id
+
 			# Insert one row to the dataframe just after N with an empty row
 			df = pd.concat([df.iloc[:N+1], pd.DataFrame([{}], columns=df.columns), df.iloc[N+1:]], ignore_index=True)
 
@@ -253,8 +264,11 @@ if __name__ == "__main__":
 
 	metadata_yt_output_file = config['METADATA_YT_OUTPUT_FILE']
 	df = pd.read_csv(metadata_yt_output_file, sep='\t')
-	#N = 249
-	for N in range(1600, 1650):
+	num_rows_before = len(df)
+	
+	for N in range(600, min(700, len(df))):
 		df = loop_to_crawl_cover_metadata_by_row_number_and_update_dataframe(N, df)
 		# save the dataframe to the csv file
 	df.to_csv(metadata_yt_output_file, sep='\t', index=False)
+	num_rows_after = len(df)
+	print(f"Number of rows before: {num_rows_before}, number of rows after: {num_rows_after}")
