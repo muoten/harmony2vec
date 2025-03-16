@@ -75,7 +75,7 @@ def get_metadata_by_recording_mbid(mbid):
 		return None, None, None
 
 def get_entry_in_full_txt_by_youtube_id(youtube_id):
-	command = f"grep '{youtube_id}' ~/youtube2wav16k_dataset/full.txt"
+	command = f"grep -- '{youtube_id}' ~/youtube2wav16k_dataset/full.txt"
 	print(command)
 	os.system(command)
 	entry = os.popen(command).read()
@@ -175,9 +175,13 @@ def get_recording_mbid_by_youtube_id(youtube_id):
 
 def loop_to_crawl_cover_metadata_by_row_number_and_update_dataframe(N,	df):
 	iswcs = None
-
+	cover_youtube_id = None
 
 	print(df.iloc[N])
+	# if work_id is not None, skip
+	if not pd.isna(df.iloc[N].work_id):
+		print(f"youtube_id {df.iloc[N].youtube_id} already has a work_id, skipping")
+		return df
 
 	my_youtube_id = df.iloc[N].youtube_id
 
@@ -193,6 +197,9 @@ def loop_to_crawl_cover_metadata_by_row_number_and_update_dataframe(N,	df):
 		print("iswcs:", iswcs)
 
 		cover_youtube_id, cover_artist_name, cover_title = get_metadata_cover_by_work_id_and_mbid_original(work_id,mbid_original)
+		if cover_youtube_id in df.youtube_id.values:
+			print(f"youtube_id {cover_youtube_id} already exists in dataframe")
+			return df
 		print(cover_youtube_id, cover_artist_name, cover_title)
 	except Exception as e:
 		print(e)
