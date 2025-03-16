@@ -177,13 +177,24 @@ def loop_to_crawl_cover_metadata_by_row_number_and_update_dataframe(N,	df):
 	iswcs = None
 	cover_youtube_id = None
 
+	print("--------------------------------")
+	print("Looking for cover metadata for the following row:")
 	print(df.iloc[N])
-	# if work_id is not None, skip
+	my_youtube_id = df.iloc[N].youtube_id
+
+	# we get the right work_id from the last full.txt file
+	str_entry = get_entry_in_full_txt_by_youtube_id(my_youtube_id)
+	if str_entry == "":
+		print(f"youtube_id {my_youtube_id} not found in full txt file, skipping")
+		return df
+			
+	dict_entry = json.loads(str_entry)
+	work_id = dict_entry['work_id']
+	
+	# we get the old work id. If work_id is not None, skip
 	if not pd.isna(df.iloc[N].work_id):
 		print(f"youtube_id {df.iloc[N].youtube_id} already has a work_id, skipping")
 		return df
-
-	my_youtube_id = df.iloc[N].youtube_id
 
 	try:
 		mbid_original = get_recording_mbid_by_youtube_id(my_youtube_id)
@@ -209,11 +220,7 @@ def loop_to_crawl_cover_metadata_by_row_number_and_update_dataframe(N,	df):
 	# if youtube_id is not None or iswcs is not None, then we can update the csv file
 	if cover_youtube_id is not None or iswcs is not None:
 
-		# we get the work_id from the full txt file
-		str_entry = get_entry_in_full_txt_by_youtube_id(my_youtube_id)
 
-		dict_entry = json.loads(str_entry)
-		work_id = dict_entry['work_id']
 
 		old_work_id = df.iloc[N].work_id
 		if not pd.isna(old_work_id):
@@ -247,7 +254,7 @@ if __name__ == "__main__":
 	metadata_yt_output_file = config['METADATA_YT_OUTPUT_FILE']
 	df = pd.read_csv(metadata_yt_output_file, sep='\t')
 	#N = 249
-	for N in range(1541, 1600):
+	for N in range(1600, 1650):
 		df = loop_to_crawl_cover_metadata_by_row_number_and_update_dataframe(N, df)
 		# save the dataframe to the csv file
 	df.to_csv(metadata_yt_output_file, sep='\t', index=False)
