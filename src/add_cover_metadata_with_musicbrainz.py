@@ -266,7 +266,7 @@ if __name__ == "__main__":
 	df = pd.read_csv(metadata_yt_output_file, sep='\t')
 	num_rows_before = len(df)
 	
-	for N in range(600, min(700, len(df))):
+	for N in range(1700, min(2300, len(df))):
 		df = loop_to_crawl_cover_metadata_by_row_number_and_update_dataframe(N, df)
 		# save the dataframe to the csv file
 	df.to_csv(metadata_yt_output_file, sep='\t', index=False)
