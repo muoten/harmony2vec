@@ -75,7 +75,8 @@ def get_metadata_by_recording_mbid(mbid):
 		return None, None, None
 
 def get_entry_in_full_txt_by_youtube_id(youtube_id):
-	command = f"grep {youtube_id} ~/youtube2wav16k_dataset/full.txt"
+	command = f"grep '{youtube_id}' ~/youtube2wav16k_dataset/full.txt"
+	print(command)
 	os.system(command)
 	entry = os.popen(command).read()
 	return entry
@@ -172,39 +173,36 @@ def get_recording_mbid_by_youtube_id(youtube_id):
 		return None
 
 
-if __name__ == "__main__":
-
-	#N = 249
-	N = 830
+def loop_to_crawl_cover_metadata_by_row_number_and_update_dataframe(N,	df):
 	iswcs = None
-	metadata_yt_output_file = config['METADATA_YT_OUTPUT_FILE']
-	df = pd.read_csv(metadata_yt_output_file, sep='\t')
+
 
 	print(df.iloc[N])
-	my_song = df.iloc[N].song
+
 	my_youtube_id = df.iloc[N].youtube_id
 
 	try:
 		mbid_original = get_recording_mbid_by_youtube_id(my_youtube_id)
 		if mbid_original is None:
 			print(f"youtube_id {my_youtube_id} not found in musicbrainz")
-			exit()
+			return df
 		print("mbid_original:", mbid_original)
 		
 		work_id, iswcs = get_work_id_and_iswcs_by_mbid(mbid_original)
 		print("work_id:", work_id)
 		print("iswcs:", iswcs)
 
-		youtube_id, artist_name, title = get_metadata_cover_by_work_id_and_mbid_original(work_id,mbid_original)
-		print(youtube_id, artist_name, title)
+		cover_youtube_id, cover_artist_name, cover_title = get_metadata_cover_by_work_id_and_mbid_original(work_id,mbid_original)
+		print(cover_youtube_id, cover_artist_name, cover_title)
 	except Exception as e:
 		print(e)
 		mbid_original = None
 		youtube_id = None
 	
 	# if youtube_id is not None or iswcs is not None, then we can update the csv file
-	if youtube_id is not None or iswcs is not None:
+	if cover_youtube_id is not None or iswcs is not None:
 
+		# we get the work_id from the full txt file
 		str_entry = get_entry_in_full_txt_by_youtube_id(my_youtube_id)
 
 		dict_entry = json.loads(str_entry)
@@ -222,18 +220,27 @@ if __name__ == "__main__":
 		if iswcs is not None:
 			df.loc[N, 'iswcs'] = iswcs
 
-		if youtube_id is not None:
-			print(f"Inserting row for youtube_id {youtube_id} at position {N+1}")
+		if cover_youtube_id is not None:
+			print(f"Inserting row for youtube_id {cover_youtube_id} at position {N+1}")
 			# Insert one row to the dataframe just after N with an empty row
 			df = pd.concat([df.iloc[:N+1], pd.DataFrame([{}], columns=df.columns), df.iloc[N+1:]], ignore_index=True)
 
 			# containing output from get_metadata_cover_by_work_id_and_mbid_original 
-			df.loc[N+1, 'youtube_id'] = youtube_id
-			df.loc[N+1, 'artist'] = artist_name.lower()
-			df.loc[N+1, 'song'] = title.lower()
+			df.loc[N+1, 'youtube_id'] = cover_youtube_id
+			df.loc[N+1, 'artist'] = cover_artist_name.lower()
+			df.loc[N+1, 'song'] = cover_title.lower()
 			df.loc[N+1, 'work_id'] = work_id
 			df.loc[N+1, 'iswcs'] = iswcs
 			df.loc[N+1, 'tempo'] = -1
 
+	return df
+
+if __name__ == "__main__":
+
+	metadata_yt_output_file = config['METADATA_YT_OUTPUT_FILE']
+	df = pd.read_csv(metadata_yt_output_file, sep='\t')
+	#N = 249
+	for N in range(1541, 1600):
+		df = loop_to_crawl_cover_metadata_by_row_number_and_update_dataframe(N, df)
 		# save the dataframe to the csv file
-		df.to_csv(metadata_yt_output_file, sep='\t', index=False)
+	df.to_csv(metadata_yt_output_file, sep='\t', index=False)
